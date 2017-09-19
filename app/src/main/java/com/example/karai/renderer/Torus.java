@@ -4,33 +4,20 @@ package com.example.karai.renderer;
  * Created by karai on 9/18/2017.
  */
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import android.app.Activity;
-import android.content.res.Resources;
 import android.opengl.GLES20;
 
 import java.io.InputStream;
 import android.content.Context;
-import java.nio.charset.Charset;
 
-import android.content.res.AssetManager;
-
-import java.io.FileReader;
-
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import android.opengl.Matrix;
 import android.util.Log;
 
 public class Torus{
@@ -45,28 +32,27 @@ public class Torus{
 
     private int program;
 
-    //float[] projectionMatrix = new float[16];
-    //float[] viewMatrix = new float[16];
-    //float[] productMatrix = new float[16];
-
     int positionAttribute;
     int normalAttribute;
+    int matrix;
+
+    int positionIdx;
+    int normalIdx;
 
     // Somehow the getAssets() throws exception
     public Torus() {
-
-        //Context context = getApplicationContext();
 
         verticesList = new ArrayList<>();
         facesList = new ArrayList<>();
         normalsList = new ArrayList<>();
 
+
         // This is the only way to get context
         MyApp myApp = new MyApp();
         Context context = myApp.getAppContext();
 
-        InputStream is = context.getResources().openRawResource(R.raw.torus);
-        //InputStream is = Resources.getSystem().openRawResource(R.raw.torus);
+        //InputStream is = context.getResources().openRawResource(R.raw.torus);
+        InputStream is = context.getResources().openRawResource(R.raw.sphere);
 
         Scanner scanner = new Scanner(is);
 
@@ -75,12 +61,14 @@ public class Torus{
         //Scanner scanner = new Scanner(context.getAssets().open("torus.obj"));
 
         // Loop through all its lines
+        int c1 = 0; int c2 = 0;
         while(scanner.hasNextLine()) {
             String line = scanner.nextLine();
             if(line.startsWith("v ")) {
                 // Add vertex line to list of vertices
                 verticesList.add(line);
                 //Log.d("STATE", line);
+                c1++;
             } else if(line.startsWith("f ")) {
 
                 // Add face line to faces list
@@ -101,6 +89,7 @@ public class Torus{
             {
                 normalsList.add(line);
                 //Log.d("STATE", line);
+                c2++;
             }
         }
 
@@ -122,6 +111,7 @@ public class Torus{
         buffer3.order(ByteOrder.nativeOrder());
         normalsBuffer = buffer3.asFloatBuffer();
 
+        int count1 = 0; int count2 = 0;
         for(String vertex: verticesList) {
             String coords[] = vertex.split(" "); // Split by space
             float x = Float.parseFloat(coords[1]);
@@ -131,6 +121,8 @@ public class Torus{
             verticesBuffer.put(y);
             verticesBuffer.put(z);
             //Log.d("STATE", "x:" + x + " y:" + y + " z:" + z);
+            count1++;
+
         }
         verticesBuffer.position(0);
 
@@ -159,8 +151,11 @@ public class Torus{
             normalsBuffer.put(y);
             normalsBuffer.put(z);
             //Log.d("STATE", "x:" + x + " y:" + y + " z:" + z);
+            count2++;
         }
         normalsBuffer.position(0);
+
+        Log.d("STATE", "how many: " + c1 + " " + c2 + " " + count1 + " " + count2);
 
         // Convert vertex_shader.txt to a string
         Scanner vScanner = new Scanner( context.getResources().openRawResource(R.raw.vertex_shader), "UTF-8" );
@@ -171,17 +166,6 @@ public class Torus{
         Scanner fScanner = new Scanner( context.getResources().openRawResource(R.raw.fragment_shader), "UTF-8" );
         String fragmentShaderCode = fScanner.useDelimiter("\\A").next();
         fScanner.close();
-        //Log.d("STATE", fragmentShaderCode);
-
-        // Somehow IOUtils.toString() method throws exception
-        //InputStream vertexShaderStream = context.getResources().openRawResource(R.raw.vertex_shader);
-        //String vertexShaderCode = IOUtils.toString(vertexShaderStream, Charset.defaultCharset());
-        //vertexShaderStream.close();
-
-        // Convert fragment_shader.txt to a string
-        //InputStream fragmentShaderStream = context.getResources().openRawResource(R.raw.fragment_shader);
-        //String fragmentShaderCode = IOUtils.toString(fragmentShaderStream, Charset.defaultCharset());
-        //fragmentShaderStream.close();
 
         // Create shader objects
         int vertexShader = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
@@ -200,58 +184,59 @@ public class Torus{
         GLES20.glAttachShader(program, fragmentShader);
 
         // ----------------------------------
-        GLES20.glBindAttribLocation(program, 0, "a_position");
-        GLES20.glBindAttribLocation(program, 1, "a_normal");
+        //GLES20.glBindAttribLocation(program, 0, "a_position");
+        //GLES20.glBindAttribLocation(program, 1, "a_normal");
         // ----------------------------------
 
         // Link and start using the program
         GLES20.glLinkProgram(program);
         GLES20.glUseProgram(program);
 
+        positionAttribute = GLES20.glGetAttribLocation(program, "a_position");
+        normalAttribute = GLES20.glGetAttribLocation(program, "a_normal");
+        matrix = GLES20.glGetUniformLocation(program, "matrix");
+
+        final int buffers[] = new int[2];
+        GLES20.glGenBuffers(2, buffers, 0);
+
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, verticesBuffer.capacity() * 4, verticesBuffer, GLES20.GL_STATIC_DRAW);
+
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[1]);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, normalsBuffer.capacity() * 4, normalsBuffer, GLES20.GL_STATIC_DRAW);
+
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+
+        positionIdx = buffers[0];
+        normalIdx = buffers[1];
+
     }
 
     public void draw(float[] mMVPMatrix)
     {
-        /*
-        int position = GLES20.glGetAttribLocation(program, "position");
-        GLES20.glEnableVertexAttribArray(position);
-
-        GLES20.glVertexAttribPointer(position,
-                3, GLES20.GL_FLOAT, false, 3 * 4, verticesBuffer);
-
-
-        int matrix = GLES20.glGetUniformLocation(program, "matrix");
-        //GLES20.glUniformMatrix4fv(matrix, 1, false, productMatrix, 0);
-        GLES20.glUniformMatrix4fv(matrix, 1, false, mMVPMatrix, 0);
-
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES,
-                facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
-
-        GLES20.glDisableVertexAttribArray(position);
+        Log.d("STATE", "what the: " + positionIdx + " " + normalIdx);
+/*
+        verticesBuffer.limit(0);
+        verticesBuffer = null;
+        normalsBuffer.limit(0);
+        normalsBuffer = null;
         */
 
-        positionAttribute = GLES20.glGetAttribLocation(program, "a_position");
-        normalAttribute = GLES20.glGetAttribLocation(program, "a_normal");
-
-
-        verticesBuffer.position(0);
-        GLES20.glVertexAttribPointer(positionAttribute, 3, GLES20.GL_FLOAT, false, 3 * 4, verticesBuffer);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, positionIdx);
         GLES20.glEnableVertexAttribArray(positionAttribute);
-        //int position = GLES20.glGetAttribLocation(program, "a_position");
-        //GLES20.glVertexAttribPointer(position, 3, GLES20.GL_FLOAT, false, 3 * 4, verticesBuffer);
-        //GLES20.glEnableVertexAttribArray(position);
+        GLES20.glVertexAttribPointer(positionAttribute, 3, GLES20.GL_FLOAT, false, 0, 0);
 
-        normalsBuffer.position(0);
-        GLES20.glVertexAttribPointer(normalAttribute, 3, GLES20.GL_FLOAT, false, 3 * 4, normalsBuffer);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, normalIdx);
         GLES20.glEnableVertexAttribArray(normalAttribute);
-        //Log.d("STATE", "values: " + normalAttribute);
+        GLES20.glVertexAttribPointer(normalAttribute, 3, GLES20.GL_FLOAT, false, 0, 0);
 
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
-        int matrix = GLES20.glGetUniformLocation(program, "matrix");
         //GLES20.glUniformMatrix4fv(matrix, 1, false, productMatrix, 0);
         GLES20.glUniformMatrix4fv(matrix, 1, false, mMVPMatrix, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
+        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 120);
 
         Log.d("STATE", "values: " + positionAttribute + " " + normalAttribute + " " + matrix);
 

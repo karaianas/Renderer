@@ -7,4 +7,5 @@
  void main()
  {
      gl_Position = matrix * a_position;
+     v_normal = a_normal;
  }

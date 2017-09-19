@@ -30,6 +30,8 @@ public class Torus{
     private ShortBuffer facesBuffer;
     private FloatBuffer normalsBuffer;
 
+    private List<Vertex> vertexSet;
+
     private int program;
 
     int positionAttribute;
@@ -46,6 +48,7 @@ public class Torus{
         facesList = new ArrayList<>();
         normalsList = new ArrayList<>();
 
+        vertexSet = new ArrayList<>();
 
         // This is the only way to get context
         MyApp myApp = new MyApp();
@@ -69,6 +72,7 @@ public class Torus{
                 verticesList.add(line);
                 //Log.d("STATE", line);
                 c1++;
+
             } else if(line.startsWith("f ")) {
 
                 // Add face line to faces list
@@ -123,8 +127,17 @@ public class Torus{
             //Log.d("STATE", "x:" + x + " y:" + y + " z:" + z);
             count1++;
 
+            Vertex v = new Vertex(x, y, z);
+            vertexSet.add(v);
         }
         verticesBuffer.position(0);
+
+        /*
+        for(Vertex v : vertexSet)
+        {
+            v.print_pos();
+        }
+        */
 
         //verticesBuffer = ByteBuffer.allocateDirect(verticesList.size() * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         //verticesBuffer.position(0);
@@ -138,6 +151,8 @@ public class Torus{
             facesBuffer.put((short)(vertex1 - 1));
             facesBuffer.put((short)(vertex2 - 1));
             facesBuffer.put((short)(vertex3 - 1));
+
+            // Compute and add the normals right here
         }
         facesBuffer.position(0);
 

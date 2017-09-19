@@ -1,0 +1,10 @@
+ attribute vec4 a_position;
+ attribute vec3 a_normal;
+ uniform mat4 matrix;
+
+ varying vec3 v_normal;
+
+ void main()
+ {
+     gl_Position = matrix * a_position;
+ }

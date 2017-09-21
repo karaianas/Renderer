@@ -7,16 +7,9 @@ package com.example.karai.renderer;
 import android.app.Activity;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-
+import android.opengl.Matrix;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
-import android.content.Context;
-import android.opengl.Matrix;
-
-import java.io.IOException;
-
-import static android.app.PendingIntent.getActivity;
 
 public class MyGLRenderer extends Activity implements GLSurfaceView.Renderer {
 
@@ -53,12 +46,7 @@ public class MyGLRenderer extends Activity implements GLSurfaceView.Renderer {
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-        // ?? How to cull face?
-        //GLES20.glCullFace(GLES20.GL_CCW);
-
-        // ?? How to draw front face first
-        //GLES20.glFrontFace(GLES20.GL_CCW);
-
+        // Must cull face
         GLES20.glEnable(GLES20.GL_CULL_FACE);
         GLES20.glCullFace(GLES20.GL_BACK);
 

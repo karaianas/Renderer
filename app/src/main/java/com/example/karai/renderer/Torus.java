@@ -4,7 +4,6 @@ package com.example.karai.renderer;
  * Created by karai on 9/18/2017.
  */
 
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -20,8 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.util.Log;
-
-import java.lang.Object;
 
 public class Torus{
 
@@ -60,7 +57,6 @@ public class Torus{
         MyApp myApp = new MyApp();
         Context context = myApp.getAppContext();
 
-        //InputStream is = context.getResources().openRawResource(R.raw.torus);
         InputStream is = context.getResources().openRawResource(R.raw.torus);
 
         Scanner scanner = new Scanner(is);
@@ -70,17 +66,14 @@ public class Torus{
         //Scanner scanner = new Scanner(context.getAssets().open("torus.obj"));
 
         // Loop through all its lines
-        int c1 = 0; int c2 = 0;
         while(scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            if(line.startsWith("v ")) {
+            if(line.startsWith("v "))
+            {
                 // Add vertex line to list of vertices
                 verticesList.add(line);
-                //Log.d("STATE", line);
-                c1++;
-
-            } else if(line.startsWith("f ")) {
-
+            } else if(line.startsWith("f "))
+            {
                 // Add face line to faces list
                 // ***Optimize the pattern matching later. Currently it's matching all 6 numbers
                 Pattern p = Pattern.compile("(\\d+)//(\\d+) (\\d+)//(\\d+) (\\d+)//(\\d+)");
@@ -90,17 +83,14 @@ public class Torus{
                 String v2 = m.group(3);
                 String v3 = m.group(5);
 
-                //Log.d("STATE", v1 + " " + v2 + " " + v3);
-
-                //facesList.add(line);
                 facesList.add(v1 + " " + v2 + " " + v3);
             }
+            /*
             else if(line.startsWith("vn "))
             {
                 normalsList.add(line);
-                //Log.d("STATE", line);
-                c2++;
             }
+            */
         }
 
         // Close the scanner
@@ -117,40 +107,32 @@ public class Torus{
         facesBuffer = buffer2.asShortBuffer();
 
         // Create buffer for (vertex) normals
+        // Need to make it the same size as the verticesBuffer
         ByteBuffer buffer3 = ByteBuffer.allocateDirect(verticesList.size() * 3 * 4);
         buffer3.order(ByteOrder.nativeOrder());
         normalsBuffer = buffer3.asFloatBuffer();
 
-        int count1 = 0; int count2 = 0;
-        for(String vertex: verticesList) {
-            String coords[] = vertex.split(" "); // Split by space
+        for(String vertex: verticesList)
+        {
+            String coords[] = vertex.split(" ");
+
             float x = Float.parseFloat(coords[1]);
             float y = Float.parseFloat(coords[2]);
             float z = Float.parseFloat(coords[3]);
+
             verticesBuffer.put(x);
             verticesBuffer.put(y);
             verticesBuffer.put(z);
-            //Log.d("STATE", "x:" + x + " y:" + y + " z:" + z);
-            count1++;
 
             Vertex v = new Vertex(x, y, z);
             vertexSet.add(v);
         }
         verticesBuffer.position(0);
 
-        /*
-        for(Vertex v : vertexSet)
+        for(String face: facesList)
         {
-            v.print_pos();
-        }
-        */
-
-        //verticesBuffer = ByteBuffer.allocateDirect(verticesList.size() * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        //verticesBuffer.position(0);
-
-        for(String face: facesList) {
             String vertexIndices[] = face.split(" ");
-            //Log.d("STATE", "x:" + vertexIndices[0] + " y:" + vertexIndices[1] + " z:" + vertexIndices[2]);
+
             short vertex1 = Short.parseShort(vertexIndices[0]);
             short vertex2 = Short.parseShort(vertexIndices[1]);
             short vertex3 = Short.parseShort(vertexIndices[2]);
@@ -166,51 +148,28 @@ public class Torus{
 
             Face f = new Face(vertex1 - 1, vertex2 - 1, vertex3 - 1);
             faceSet.add(f);
+
             float [] fn = f.compute_normal(p1, p2, p3);
-            Log.d("STATE", "normal: " + fn[0] + " " + fn[1] + " " + fn[2]);
 
             vertexSet.get(vertex1 - 1).add_normal(fn);
             vertexSet.get(vertex2 - 1).add_normal(fn);
             vertexSet.get(vertex3 - 1).add_normal(fn);
-
-            //f.print_fn();
-
         }
         facesBuffer.position(0);
 
-        //Log.d("STATE", "vsize: " + vertexSet.size() + " fsize: " + faceSet.size());
         for(Vertex v: vertexSet)
         {
             float [] vn = v.get_normal();
             normalsBuffer.put(vn[0]);
             normalsBuffer.put(vn[1]);
             normalsBuffer.put(vn[2]);
-            count2++;
         }
         normalsBuffer.position(0);
-        /*
-        for(String normal: normalsList)
-        {
-            String values[] = normal.split(" ");
-            float x = Float.parseFloat(values[1]);
-            float y = Float.parseFloat(values[2]);
-            float z = Float.parseFloat(values[3]);
-            normalsBuffer.put(x);
-            normalsBuffer.put(y);
-            normalsBuffer.put(z);
-            //Log.d("STATE", "x:" + x + " y:" + y + " z:" + z);
-            count2++;
-        }
-        normalsBuffer.position(0);
-        */
-
-        Log.d("STATE", "how many: " + c1 + " " + c2 + " " + count1 + " " + count2);
 
         // Convert vertex_shader.txt to a string
         Scanner vScanner = new Scanner( context.getResources().openRawResource(R.raw.vertex_shader), "UTF-8" );
         String vertexShaderCode = vScanner.useDelimiter("\\A").next();
         vScanner.close();
-        //Log.d("STATE", vertexShaderCode);
 
         Scanner fScanner = new Scanner( context.getResources().openRawResource(R.raw.fragment_shader), "UTF-8" );
         String fragmentShaderCode = fScanner.useDelimiter("\\A").next();
@@ -264,8 +223,7 @@ public class Torus{
 
     public void draw(float[] mMVPMatrix, float[] mMVMatrix)
     {
-        Log.d("STATE", "what the: " + positionIdx + " " + normalIdx);
-/*
+        /*
         verticesBuffer.limit(0);
         verticesBuffer = null;
         normalsBuffer.limit(0);
@@ -282,16 +240,11 @@ public class Torus{
 
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
-        //GLES20.glUniformMatrix4fv(matrix, 1, false, productMatrix, 0);
         GLES20.glUniformMatrix4fv(MVPmtx, 1, false, mMVPMatrix, 0);
         GLES20.glUniformMatrix4fv(MVmtx, 1, false, mMVMatrix, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
         //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 12);
-
-
-
-        Log.d("STATE", "values: " + positionAttribute + " " + normalAttribute + " " + MVPmtx);
 
         //GLES20.glDisableVertexAttribArray(position);
 

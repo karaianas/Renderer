@@ -4,6 +4,7 @@ package com.example.karai.renderer;
  * Created by karai on 9/18/2017.
  */
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -20,6 +21,8 @@ import java.util.regex.Pattern;
 
 import android.util.Log;
 
+import java.lang.Object;
+
 public class Torus{
 
     private List<String> verticesList;
@@ -31,12 +34,14 @@ public class Torus{
     private FloatBuffer normalsBuffer;
 
     private List<Vertex> vertexSet;
+    private List<Face> faceSet;
 
     private int program;
 
     int positionAttribute;
     int normalAttribute;
-    int matrix;
+    int MVPmtx;
+    int MVmtx;
 
     int positionIdx;
     int normalIdx;
@@ -49,13 +54,14 @@ public class Torus{
         normalsList = new ArrayList<>();
 
         vertexSet = new ArrayList<>();
+        faceSet = new ArrayList<>();
 
         // This is the only way to get context
         MyApp myApp = new MyApp();
         Context context = myApp.getAppContext();
 
         //InputStream is = context.getResources().openRawResource(R.raw.torus);
-        InputStream is = context.getResources().openRawResource(R.raw.sphere);
+        InputStream is = context.getResources().openRawResource(R.raw.torus);
 
         Scanner scanner = new Scanner(is);
 
@@ -111,7 +117,7 @@ public class Torus{
         facesBuffer = buffer2.asShortBuffer();
 
         // Create buffer for (vertex) normals
-        ByteBuffer buffer3 = ByteBuffer.allocateDirect(normalsList.size() * 3 * 4);
+        ByteBuffer buffer3 = ByteBuffer.allocateDirect(verticesList.size() * 3 * 4);
         buffer3.order(ByteOrder.nativeOrder());
         normalsBuffer = buffer3.asFloatBuffer();
 
@@ -148,14 +154,41 @@ public class Torus{
             short vertex1 = Short.parseShort(vertexIndices[0]);
             short vertex2 = Short.parseShort(vertexIndices[1]);
             short vertex3 = Short.parseShort(vertexIndices[2]);
+
             facesBuffer.put((short)(vertex1 - 1));
             facesBuffer.put((short)(vertex2 - 1));
             facesBuffer.put((short)(vertex3 - 1));
 
             // Compute and add the normals right here
+            float [] p1 = vertexSet.get(vertex1 - 1).get_position();
+            float [] p2 = vertexSet.get(vertex2 - 1).get_position();
+            float [] p3 = vertexSet.get(vertex3 - 1).get_position();
+
+            Face f = new Face(vertex1 - 1, vertex2 - 1, vertex3 - 1);
+            faceSet.add(f);
+            float [] fn = f.compute_normal(p1, p2, p3);
+            Log.d("STATE", "normal: " + fn[0] + " " + fn[1] + " " + fn[2]);
+
+            vertexSet.get(vertex1 - 1).add_normal(fn);
+            vertexSet.get(vertex2 - 1).add_normal(fn);
+            vertexSet.get(vertex3 - 1).add_normal(fn);
+
+            //f.print_fn();
+
         }
         facesBuffer.position(0);
 
+        //Log.d("STATE", "vsize: " + vertexSet.size() + " fsize: " + faceSet.size());
+        for(Vertex v: vertexSet)
+        {
+            float [] vn = v.get_normal();
+            normalsBuffer.put(vn[0]);
+            normalsBuffer.put(vn[1]);
+            normalsBuffer.put(vn[2]);
+            count2++;
+        }
+        normalsBuffer.position(0);
+        /*
         for(String normal: normalsList)
         {
             String values[] = normal.split(" ");
@@ -169,6 +202,7 @@ public class Torus{
             count2++;
         }
         normalsBuffer.position(0);
+        */
 
         Log.d("STATE", "how many: " + c1 + " " + c2 + " " + count1 + " " + count2);
 
@@ -209,7 +243,8 @@ public class Torus{
 
         positionAttribute = GLES20.glGetAttribLocation(program, "a_position");
         normalAttribute = GLES20.glGetAttribLocation(program, "a_normal");
-        matrix = GLES20.glGetUniformLocation(program, "matrix");
+        MVPmtx = GLES20.glGetUniformLocation(program, "MVP_matrix");
+        MVmtx = GLES20.glGetUniformLocation(program, "MV_matrix");
 
         final int buffers[] = new int[2];
         GLES20.glGenBuffers(2, buffers, 0);
@@ -227,7 +262,7 @@ public class Torus{
 
     }
 
-    public void draw(float[] mMVPMatrix)
+    public void draw(float[] mMVPMatrix, float[] mMVMatrix)
     {
         Log.d("STATE", "what the: " + positionIdx + " " + normalIdx);
 /*
@@ -248,12 +283,15 @@ public class Torus{
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
         //GLES20.glUniformMatrix4fv(matrix, 1, false, productMatrix, 0);
-        GLES20.glUniformMatrix4fv(matrix, 1, false, mMVPMatrix, 0);
+        GLES20.glUniformMatrix4fv(MVPmtx, 1, false, mMVPMatrix, 0);
+        GLES20.glUniformMatrix4fv(MVmtx, 1, false, mMVMatrix, 0);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
-        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 120);
+        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 12);
 
-        Log.d("STATE", "values: " + positionAttribute + " " + normalAttribute + " " + matrix);
+
+
+        Log.d("STATE", "values: " + positionAttribute + " " + normalAttribute + " " + MVPmtx);
 
         //GLES20.glDisableVertexAttribArray(position);
 

@@ -53,9 +53,20 @@ public class MyGLRenderer extends Activity implements GLSurfaceView.Renderer {
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
+        // ?? How to cull face?
+        //GLES20.glCullFace(GLES20.GL_CCW);
+
+        // ?? How to draw front face first
+        //GLES20.glFrontFace(GLES20.GL_CCW);
+
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
+        GLES20.glCullFace(GLES20.GL_BACK);
+
         //mTriangle.draw();
 
         // Matrix set-up
+        // (0) Model matrix
+
         // (1) View matrix
         // ***Later implement way to change view points
         Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 3.0f, 5.0f, 0.0f, 0.0f, 0.f, 0.0f, 1.0f, 0.0f);
@@ -66,7 +77,7 @@ public class MyGLRenderer extends Activity implements GLSurfaceView.Renderer {
         // (3) projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
-        mTorus.draw(mMVPMatrix);
+        mTorus.draw(mMVPMatrix, mViewMatrix);
 
         // *** Later add Rotation matrix for x-y dimension rotation
         //Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);

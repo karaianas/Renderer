@@ -21,16 +21,26 @@ public class Vertex {
         n[2] = 0.0f;
     }
 
-    public void add_normal(float nx, float ny, float nz)
+    public void add_normal(float [] fn)
     {
-        n[0] += nx;
-        n[1] += ny;
-        n[2] += nz;
+        n[0] += fn[0];
+        n[1] += fn[1];
+        n[2] += fn[2];
     }
 
     public void print_pos()
     {
         Log.d("STATE", "Position: " + p[0] + " " + p[1] + " " + p[2]);
+    }
+
+    public float [] get_position()
+    {
+        return p;
+    }
+
+    public float [] get_normal()
+    {
+        return n;
     }
 
 }

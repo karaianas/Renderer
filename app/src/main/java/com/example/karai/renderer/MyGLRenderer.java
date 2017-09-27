@@ -57,7 +57,9 @@ public class MyGLRenderer extends Activity implements GLSurfaceView.Renderer {
 
         // (1) View matrix
         // ***Later implement way to change view points
-        Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 3.0f, 5.0f, 0.0f, 0.0f, 0.f, 0.0f, 1.0f, 0.0f);
+        //Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f, 0.0f, 1.0f);
+        //Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 3.0f, 5.0f, 0.0f, 0.0f, 0.f, 0.0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mViewMatrix, 0, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.f, 0.0f, 1.0f, 0.0f);
 
         // (2) Projection matrix
         //Matrix.frustumM(mProjectionMatrix, 0, -1, 1, -1, 1, 2, 9);

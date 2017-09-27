@@ -40,6 +40,8 @@ public class Torus{
     int MVPmtx;
     int MVmtx;
 
+    int lPos;
+
     int positionIdx;
     int normalIdx;
 
@@ -57,7 +59,7 @@ public class Torus{
         MyApp myApp = new MyApp();
         Context context = myApp.getAppContext();
 
-        InputStream is = context.getResources().openRawResource(R.raw.torus);
+        InputStream is = context.getResources().openRawResource(R.raw.uvsphere);
 
         Scanner scanner = new Scanner(is);
 
@@ -205,6 +207,8 @@ public class Torus{
         MVPmtx = GLES20.glGetUniformLocation(program, "MVP_matrix");
         MVmtx = GLES20.glGetUniformLocation(program, "MV_matrix");
 
+        lPos = GLES20.glGetUniformLocation(program, "dir_light_pos");
+
         final int buffers[] = new int[2];
         GLES20.glGenBuffers(2, buffers, 0);
 
@@ -218,7 +222,6 @@ public class Torus{
 
         positionIdx = buffers[0];
         normalIdx = buffers[1];
-
     }
 
     public void draw(float[] mMVPMatrix, float[] mMVMatrix)
@@ -242,6 +245,8 @@ public class Torus{
 
         GLES20.glUniformMatrix4fv(MVPmtx, 1, false, mMVPMatrix, 0);
         GLES20.glUniformMatrix4fv(MVmtx, 1, false, mMVMatrix, 0);
+
+        GLES20.glUniform3f(lPos, 0.0f, 0.0f, 3.0f);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
         //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 12);

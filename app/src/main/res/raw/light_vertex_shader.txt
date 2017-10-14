@@ -1,0 +1,9 @@
+uniform mat4 u_MVP;
+attribute vec4 a_position;
+
+void main()
+{
+    //vec4 sth = vec4(0.0, 5.0, 0.0, 1.0);
+    gl_Position = u_MVP * a_position;
+    gl_PointSize = 20.0;
+}

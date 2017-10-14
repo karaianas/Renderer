@@ -59,7 +59,7 @@ public class Torus{
         MyApp myApp = new MyApp();
         Context context = myApp.getAppContext();
 
-        InputStream is = context.getResources().openRawResource(R.raw.uvsphere);
+        InputStream is = context.getResources().openRawResource(R.raw.torus);
 
         Scanner scanner = new Scanner(is);
 
@@ -198,17 +198,10 @@ public class Torus{
         //GLES20.glBindAttribLocation(program, 1, "a_normal");
         // ----------------------------------
 
-        // Link and start using the program
+        // Link the main program
         GLES20.glLinkProgram(program);
-        GLES20.glUseProgram(program);
 
-        positionAttribute = GLES20.glGetAttribLocation(program, "a_position");
-        normalAttribute = GLES20.glGetAttribLocation(program, "a_normal");
-        MVPmtx = GLES20.glGetUniformLocation(program, "MVP_matrix");
-        MVmtx = GLES20.glGetUniformLocation(program, "MV_matrix");
-
-        lPos = GLES20.glGetUniformLocation(program, "dir_light_pos");
-
+        // Create buffers for vertices and normals
         final int buffers[] = new int[2];
         GLES20.glGenBuffers(2, buffers, 0);
 
@@ -224,7 +217,7 @@ public class Torus{
         normalIdx = buffers[1];
     }
 
-    public void draw(float[] mMVPMatrix, float[] mMVMatrix)
+    public void draw(float[] mMVPMatrix, float[] mMVMatrix, float[] lPosition)
     {
         /*
         verticesBuffer.limit(0);
@@ -233,23 +226,34 @@ public class Torus{
         normalsBuffer = null;
         */
 
+        GLES20.glUseProgram(program);
+
+        positionAttribute = GLES20.glGetAttribLocation(program, "a_position");
+        normalAttribute = GLES20.glGetAttribLocation(program, "a_normal");
+        MVPmtx = GLES20.glGetUniformLocation(program, "u_MVP");
+        MVmtx = GLES20.glGetUniformLocation(program, "u_MV");
+        lPos = GLES20.glGetUniformLocation(program, "u_light_position");
+
+        // Bind vertices
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, positionIdx);
         GLES20.glEnableVertexAttribArray(positionAttribute);
         GLES20.glVertexAttribPointer(positionAttribute, 3, GLES20.GL_FLOAT, false, 0, 0);
 
+        // Bind normals
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, normalIdx);
         GLES20.glEnableVertexAttribArray(normalAttribute);
         GLES20.glVertexAttribPointer(normalAttribute, 3, GLES20.GL_FLOAT, false, 0, 0);
 
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
+        // Send information
         GLES20.glUniformMatrix4fv(MVPmtx, 1, false, mMVPMatrix, 0);
         GLES20.glUniformMatrix4fv(MVmtx, 1, false, mMVMatrix, 0);
+        GLES20.glUniform3f(lPos, lPosition[0], lPosition[1], lPosition[2]);
 
-        GLES20.glUniform3f(lPos, 0.0f, 0.0f, 3.0f);
-
+        // Draw
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
-        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 12);
+        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, facesList.size()  / 3);
 
         //GLES20.glDisableVertexAttribArray(position);
 

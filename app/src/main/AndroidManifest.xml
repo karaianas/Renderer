@@ -10,16 +10,23 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
         android:name="com.example.karai.renderer.MyApp">
-        <activity android:name=".MainActivity">
-            //<android.opengl.GLSurfaceView android:id  = "@+id/my_surface_view"/> not needed
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
+
+    <activity android:name=".MainActivity">
+        <!--<android.opengl.GLSurfaceView android:id  = "@+id/my_surface_view"/> not needed -->
+        <!--<com.google.vr.sdk.base.GvrView
+            android:id="@+id/gvr_view"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true" />-->
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+
+        </intent-filter>
+    </activity>
+</application>
 
 </manifest>

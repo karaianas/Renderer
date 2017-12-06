@@ -6,8 +6,7 @@ import android.os.Bundle;
 import android.opengl.GLSurfaceView;
 import android.app.Activity;
 
-
-public class MainActivity extends Activity {
+public class MainActivity extends Activity{
     private GLSurfaceView mGLView;
 
     @Override

@@ -10,6 +10,7 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 import java.io.InputStream;
 import android.content.Context;
@@ -34,6 +35,10 @@ public class Torus{
     private List<Face> faceSet;
 
     private int program;
+
+    private float [] M = new float[16];
+    private float [] MV = new float[16];
+    private float [] MVP = new float[16];
 
     int positionAttribute;
     int normalAttribute;
@@ -217,7 +222,12 @@ public class Torus{
         normalIdx = buffers[1];
     }
 
-    public void draw(float[] mMVPMatrix, float[] mMVMatrix, float[] lPosition)
+    public void setM(float [] modelMatrix)
+    {
+        M = modelMatrix;
+    }
+
+    public void draw(float[] V, float[] P, float[] lPosition)
     {
         /*
         verticesBuffer.limit(0);
@@ -247,11 +257,14 @@ public class Torus{
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
         // Send information
-        GLES20.glUniformMatrix4fv(MVPmtx, 1, false, mMVPMatrix, 0);
-        GLES20.glUniformMatrix4fv(MVmtx, 1, false, mMVMatrix, 0);
+        Matrix.multiplyMM(MV, 0, V, 0, M, 0);
+        Matrix.multiplyMM(MVP, 0, P, 0, MV, 0);
+        GLES20.glUniformMatrix4fv(MVPmtx, 1, false, MVP, 0);
+        GLES20.glUniformMatrix4fv(MVmtx, 1, false, MV, 0);
         GLES20.glUniform3f(lPos, lPosition[0], lPosition[1], lPosition[2]);
 
         // Draw
+        Log.i("NUmber", ":" + facesList.size());
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
         //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, facesList.size()  / 3);
 

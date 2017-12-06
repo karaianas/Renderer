@@ -18,6 +18,11 @@ public class Light {
     int positionAttribute;
     int MVPmtx;
 
+    float [] M = new float [16];
+    float [] MV = new float [16];
+    float [] MVP = new float [16];
+    float [] position = {0.0f, 0.0f, 0.0f, 1.0f};
+
     public Light()
     {
         // This is the only way to get context
@@ -58,7 +63,30 @@ public class Light {
         GLES20.glLinkProgram(program);
     }
 
-    public void draw(float[] mMVPMatrix, float[] lPosition)
+    public void setM(float [] modelMatrix)
+    {
+        M = modelMatrix;
+    }
+
+    public float [] getPositionMV()
+    {
+        float [] position_MV = new float[4];
+        Matrix.multiplyMV(position_MV, 0, MV, 0, position, 0);
+
+        return position_MV;
+    }
+
+    public void setPosition(float [] lPosition)
+    {
+        position = lPosition;
+    }
+
+    public void rotate(float [] R)
+    {
+        Matrix.multiplyMM(M, 0, R, 0, M, 0);
+    }
+
+    public void draw(float[] V, float[] P)
     {
         /*
         verticesBuffer.limit(0);
@@ -73,15 +101,15 @@ public class Light {
         MVPmtx = GLES20.glGetUniformLocation(program, "u_MVP");
 
         // Pass in the position
-        GLES20.glVertexAttrib3f(positionAttribute, lPosition[0], lPosition[1], lPosition[2]);
+        GLES20.glVertexAttrib3f(positionAttribute, position[0], position[1], position[2]);
 
         // Since we are not using a buffer object, disable vertex arrays for this attribute.
         GLES20.glDisableVertexAttribArray(positionAttribute);
 
         // Pass in the transformation matrix.
-        //Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mLightModelMatrix, 0);
-        //Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0);
-        GLES20.glUniformMatrix4fv(MVPmtx, 1, false, mMVPMatrix, 0);
+        Matrix.multiplyMM(MV, 0, V, 0, M, 0);
+        Matrix.multiplyMM(MVP, 0, P, 0, MV, 0);
+        GLES20.glUniformMatrix4fv(MVPmtx, 1, false, MVP, 0);
 
         // Draw the point.
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1);
